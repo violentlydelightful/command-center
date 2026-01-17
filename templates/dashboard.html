@@ -172,12 +172,11 @@
     <script>
         // ========== DRAG AND DROP SYSTEM ==========
         let editMode = false;
-        let draggedWidget = null;
-        let draggedIndex = null;
+        let draggedEl = null;
+        let placeholder = null;
         const grid = document.querySelector('.grid');
-        const widgets = Array.from(grid.querySelectorAll('.widget'));
 
-        // Widget order (saved to localStorage)
+        // Widget classes for saving
         const widgetClasses = [
             'briefing-widget', 'weather-widget', 'stocks-widget',
             'calendar-widget', 'news-widget', 'github-widget',
@@ -190,24 +189,24 @@
             if (saved) {
                 try {
                     const order = JSON.parse(saved);
-                    order.forEach((className, index) => {
+                    const fragment = document.createDocumentFragment();
+                    order.forEach(className => {
                         const widget = grid.querySelector('.' + className);
-                        if (widget) {
-                            grid.appendChild(widget);
-                        }
+                        if (widget) fragment.appendChild(widget);
                     });
-                } catch (e) {
-                    console.log('Could not load saved layout');
-                }
+                    // Append any remaining widgets not in saved order
+                    grid.querySelectorAll('.widget').forEach(w => fragment.appendChild(w));
+                    grid.appendChild(fragment);
+                } catch (e) { console.log('Layout load failed'); }
             }
         }
 
         // Save layout
         function saveLayout() {
-            const currentOrder = Array.from(grid.querySelectorAll('.widget'))
+            const order = Array.from(grid.querySelectorAll('.widget'))
                 .map(w => widgetClasses.find(c => w.classList.contains(c)))
                 .filter(Boolean);
-            localStorage.setItem('dashboardLayout', JSON.stringify(currentOrder));
+            localStorage.setItem('dashboardLayout', JSON.stringify(order));
         }
 
         // Toggle edit mode
@@ -216,126 +215,107 @@
             const btn = document.getElementById('editModeBtn');
             const text = document.getElementById('editModeText');
 
-            if (editMode) {
-                grid.classList.add('edit-mode');
-                btn.classList.add('active');
-                text.textContent = 'Done';
-                enableDragDrop();
-            } else {
-                grid.classList.remove('edit-mode');
-                btn.classList.remove('active');
-                text.textContent = 'Edit';
-                disableDragDrop();
-                saveLayout();
-            }
+            grid.classList.toggle('edit-mode', editMode);
+            btn.classList.toggle('active', editMode);
+            text.textContent = editMode ? 'Done' : 'Edit';
+
+            if (!editMode) saveLayout();
         }
 
-        // Enable drag and drop
-        function enableDragDrop() {
-            const allWidgets = grid.querySelectorAll('.widget');
-            allWidgets.forEach((widget, index) => {
-                widget.draggable = true;
-                widget.dataset.index = index;
+        // Mouse/touch drag implementation
+        grid.addEventListener('pointerdown', (e) => {
+            if (!editMode) return;
+            const widget = e.target.closest('.widget');
+            if (!widget) return;
 
-                widget.addEventListener('dragstart', handleDragStart);
-                widget.addEventListener('dragend', handleDragEnd);
-                widget.addEventListener('dragover', handleDragOver);
-                widget.addEventListener('dragenter', handleDragEnter);
-                widget.addEventListener('dragleave', handleDragLeave);
-                widget.addEventListener('drop', handleDrop);
-            });
-        }
-
-        // Disable drag and drop
-        function disableDragDrop() {
-            const allWidgets = grid.querySelectorAll('.widget');
-            allWidgets.forEach(widget => {
-                widget.draggable = false;
-                widget.removeEventListener('dragstart', handleDragStart);
-                widget.removeEventListener('dragend', handleDragEnd);
-                widget.removeEventListener('dragover', handleDragOver);
-                widget.removeEventListener('dragenter', handleDragEnter);
-                widget.removeEventListener('dragleave', handleDragLeave);
-                widget.removeEventListener('drop', handleDrop);
-            });
-        }
-
-        function handleDragStart(e) {
-            draggedWidget = this;
-            draggedIndex = Array.from(grid.children).indexOf(this);
-            this.classList.add('dragging');
-            grid.classList.add('dragging-active');
-
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', draggedIndex);
-
-            // Create custom drag image
-            const rect = this.getBoundingClientRect();
-            e.dataTransfer.setDragImage(this, rect.width / 2, 30);
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            grid.classList.remove('dragging-active');
-
-            // Remove all drag-over classes
-            grid.querySelectorAll('.widget').forEach(w => {
-                w.classList.remove('drag-over');
-            });
-
-            draggedWidget = null;
-            draggedIndex = null;
-        }
-
-        function handleDragOver(e) {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
+            draggedEl = widget;
 
-        function handleDragEnter(e) {
-            e.preventDefault();
-            if (this !== draggedWidget) {
-                this.classList.add('drag-over');
-            }
-        }
+            const rect = widget.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
 
-        function handleDragLeave(e) {
-            this.classList.remove('drag-over');
-        }
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'widget drag-placeholder';
+            placeholder.style.cssText = `
+                height: ${rect.height}px;
+                background: rgba(191, 90, 242, 0.1);
+                border: 2px dashed rgba(191, 90, 242, 0.5);
+                border-radius: 20px;
+            `;
 
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
+            // Style dragged element
+            widget.classList.add('dragging');
+            widget.style.cssText = `
+                position: fixed;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                left: ${rect.left}px;
+                top: ${rect.top}px;
+                z-index: 1000;
+                pointer-events: none;
+                transition: none;
+            `;
 
-            if (this !== draggedWidget && draggedWidget) {
-                // Swap the widgets
-                const allWidgets = Array.from(grid.children);
-                const dropIndex = allWidgets.indexOf(this);
+            // Insert placeholder
+            widget.parentNode.insertBefore(placeholder, widget);
 
-                if (draggedIndex < dropIndex) {
-                    this.parentNode.insertBefore(draggedWidget, this.nextSibling);
-                } else {
-                    this.parentNode.insertBefore(draggedWidget, this);
+            function onMove(e) {
+                if (!draggedEl) return;
+
+                draggedEl.style.left = (e.clientX - offsetX) + 'px';
+                draggedEl.style.top = (e.clientY - offsetY) + 'px';
+
+                // Find drop target
+                const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+                const dropTarget = elemBelow?.closest('.widget:not(.dragging):not(.drag-placeholder)');
+
+                if (dropTarget && dropTarget !== placeholder) {
+                    const targetRect = dropTarget.getBoundingClientRect();
+                    const midY = targetRect.top + targetRect.height / 2;
+
+                    if (e.clientY < midY) {
+                        dropTarget.parentNode.insertBefore(placeholder, dropTarget);
+                    } else {
+                        dropTarget.parentNode.insertBefore(placeholder, dropTarget.nextSibling);
+                    }
                 }
-
-                // Visual feedback
-                draggedWidget.style.animation = 'none';
-                draggedWidget.offsetHeight; // Trigger reflow
-                draggedWidget.style.animation = '';
-
-                this.classList.remove('drag-over');
             }
 
-            return false;
-        }
+            function onUp() {
+                if (!draggedEl) return;
 
-        // Reset layout to default
+                // Move widget to placeholder position
+                placeholder.parentNode.insertBefore(draggedEl, placeholder);
+                placeholder.remove();
+
+                // Reset styles
+                draggedEl.classList.remove('dragging');
+                draggedEl.style.cssText = '';
+
+                // Animate into place
+                draggedEl.style.animation = 'dropIn 0.3s ease';
+                setTimeout(() => draggedEl.style.animation = '', 300);
+
+                draggedEl = null;
+                placeholder = null;
+
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+            }
+
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+        });
+
+        // Reset layout
         function resetLayout() {
             localStorage.removeItem('dashboardLayout');
             location.reload();
         }
 
-        // Load saved layout on startup
+        // Load saved layout
         loadLayout();
 
         // ========== ANIMATED BACKGROUND ==========
