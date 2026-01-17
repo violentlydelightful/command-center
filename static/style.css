@@ -1,398 +1,568 @@
-/* Command Center - Dark Professional Dashboard */
+/* Command Center - Apple Weather Inspired */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg-primary: #0f1419;
-    --bg-secondary: #1a1f2e;
-    --bg-widget: #1e2433;
-    --text-primary: #e7e9ea;
-    --text-secondary: #8b98a5;
-    --accent: #1d9bf0;
-    --accent-green: #00ba7c;
-    --accent-red: #f4212e;
-    --border: #2f3336;
+    --glass-bg: rgba(30, 30, 40, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.3);
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-muted: rgba(255, 255, 255, 0.4);
+    --accent-green: #30d158;
+    --accent-red: #ff453a;
+    --accent-blue: #0a84ff;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
     min-height: 100vh;
+    background: linear-gradient(180deg, #1c1c2e 0%, #2d1f3d 50%, #1a1a2e 100%);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* Animated background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(100, 80, 180, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(60, 100, 180, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .dashboard {
+    position: relative;
+    z-index: 1;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1.5rem;
+    padding: 0.75rem;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header */
+/* Compact Header */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0 2rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 2rem;
+    padding: 0.5rem 0.5rem 0.75rem;
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
 }
 
 .status {
-    font-size: 0.85rem;
+    font-size: 0.65rem;
     color: var(--accent-green);
-    margin-left: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .timestamp {
-    font-family: 'SF Mono', monospace;
-    font-size: 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
     color: var(--text-secondary);
 }
 
 .btn-refresh {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 8px;
     cursor: pointer;
-    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
     transition: all 0.2s;
 }
 
 .btn-refresh:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.15);
 }
 
-/* Grid Layout */
+/* Main Grid - Compact Apple Weather Style */
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: auto;
-    gap: 1.5rem;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.6rem;
+    flex: 1;
+    min-height: 0;
 }
 
-/* Widgets */
+/* Glass Card Widgets */
 .widget {
-    background: var(--bg-widget);
-    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
-    padding: 1.25rem;
+    padding: 0.75rem;
     position: relative;
+    overflow: hidden;
 }
 
-.widget-large {
-    grid-column: span 2;
+.widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
+/* Widget positioning */
+.briefing-widget {
+    grid-column: 1;
+    grid-row: 1 / 4;
+}
+
+.weather-widget {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.stocks-widget {
+    grid-column: 3;
+    grid-row: 1 / 3;
+}
+
+.news-widget {
+    grid-column: 4;
+    grid-row: 1 / 4;
+}
+
+.github-widget {
+    grid-column: 2;
+    grid-row: 2 / 4;
+}
+
+.quote-widget {
+    grid-column: 3;
+    grid-row: 3;
+}
+
+/* Widget Header - Compact */
 .widget-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
 }
 
 .widget-header h2 {
-    font-size: 0.9rem;
+    font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .widget-badge {
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.55rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-weight: 600;
+    text-transform: uppercase;
 }
 
 .widget-badge.ai {
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    background: linear-gradient(135deg, #0a84ff, #bf5af2);
     color: white;
 }
 
 .widget-badge.demo {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
 }
 
 .widget-content {
-    min-height: 100px;
+    height: calc(100% - 1.5rem);
+    overflow: hidden;
 }
 
 /* Loading & Error */
 .loading {
-    color: var(--text-secondary);
-    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100px;
+    height: 100%;
 }
 
 .error {
     color: var(--accent-red);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
 }
 
 .demo-badge {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    font-size: 0.7rem;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.5rem;
     font-weight: 600;
-    background: #f59e0b;
+    background: rgba(245, 158, 11, 0.8);
     color: #000;
-    padding: 0.25rem 0.6rem;
-    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 /* Briefing Widget */
 .briefing-widget .widget-content {
-    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .briefing-text {
-    line-height: 1.7;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    flex: 1;
+    overflow-y: auto;
+}
+
+.briefing-text::-webkit-scrollbar {
+    width: 3px;
+}
+
+.briefing-text::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 3px;
 }
 
 .briefing-text strong {
-    color: var(--accent);
+    color: var(--text-primary);
+    font-weight: 600;
     display: block;
-    margin-top: 1rem;
-    margin-bottom: 0.25rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.15rem;
+    font-size: 0.75rem;
 }
 
 .briefing-meta {
-    margin-top: 1rem;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 .btn-regenerate {
     position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    background: transparent;
-    border: 1px solid var(--border);
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     color: var(--text-secondary);
-    padding: 0.375rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-regenerate:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
 }
 
-/* Weather Widget */
+/* Weather Widget - Hero Style */
 .weather-display {
     text-align: center;
-    padding: 1rem 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.weather-city {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
 }
 
 .temp-main {
-    font-size: 3rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 2.75rem;
+    font-weight: 200;
+    letter-spacing: -2px;
+    line-height: 1;
 }
 
 .condition {
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    margin: 0.5rem 0;
+    margin: 0.25rem 0;
 }
 
 .weather-details {
     display: flex;
     justify-content: center;
-    gap: 1.5rem;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    gap: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
 }
 
 .city-input {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     color: var(--text-primary);
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 4px;
-    font-size: 0.8rem;
-    width: 100px;
+    font-size: 0.65rem;
+    width: 70px;
+    text-align: center;
 }
 
-/* Stocks Widget */
+.city-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Stocks Widget - Compact List */
 .stocks-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.4rem;
 }
 
 .stock-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.stock-item:last-child {
+    border-bottom: none;
 }
 
 .stock-symbol {
+    font-size: 0.75rem;
     font-weight: 600;
+}
+
+.stock-info {
+    text-align: right;
 }
 
 .stock-price {
-    font-family: 'SF Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    display: block;
 }
 
 .stock-change {
-    font-family: 'SF Mono', monospace;
+    font-size: 0.65rem;
     font-weight: 600;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    font-variant-numeric: tabular-nums;
 }
 
 .stock-item.positive .stock-change {
-    background: rgba(0, 186, 124, 0.15);
     color: var(--accent-green);
 }
 
 .stock-item.negative .stock-change {
-    background: rgba(244, 33, 46, 0.15);
     color: var(--accent-red);
 }
 
-/* News Widget */
+/* News Widget - Scrollable Headlines */
 .news-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.news-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.news-list::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 3px;
 }
 
 .news-item {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.news-item:last-child {
+    border-bottom: none;
 }
 
 .news-title {
     display: block;
-    font-size: 0.9rem;
-    line-height: 1.4;
-    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 .news-source {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    display: block;
 }
 
 #news-category {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     color: var(--text-primary);
-    padding: 0.25rem 0.5rem;
+    padding: 0.15rem 0.3rem;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
 }
 
 /* GitHub Widget */
 .github-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.35rem;
 }
 
 .github-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.github-item:last-child {
+    border-bottom: none;
 }
 
 .repo-name {
-    font-size: 0.85rem;
-    color: var(--accent);
+    font-size: 0.7rem;
+    color: var(--accent-blue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
 }
 
 .repo-stars {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 
-/* Quote Widget */
+/* Quote Widget - Centered */
 .quote-display {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     text-align: center;
-    padding: 1rem 0;
 }
 
 .quote-display p {
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-style: italic;
-    line-height: 1.6;
-    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
 }
 
 .quote-display cite {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-style: normal;
 }
 
-/* Footer */
+/* Footer - Minimal */
 footer {
     text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--border);
-    margin-top: 2rem;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    flex-shrink: 0;
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
     .grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: auto auto auto auto;
     }
-    .widget-large {
-        grid-column: span 2;
+    .briefing-widget {
+        grid-column: 1 / 3;
+        grid-row: 1;
+    }
+    .weather-widget {
+        grid-column: 3;
+        grid-row: 1;
+    }
+    .stocks-widget {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    .news-widget {
+        grid-column: 2 / 4;
+        grid-row: 2 / 4;
+    }
+    .github-widget {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    .quote-widget {
+        grid-column: 1 / 4;
+        grid-row: 4;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .dashboard {
+        height: auto;
+        min-height: 100vh;
+    }
     .grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
     }
-    .widget-large {
+    .briefing-widget,
+    .news-widget {
+        grid-column: 1 / 3;
+    }
+    .weather-widget,
+    .stocks-widget,
+    .github-widget,
+    .quote-widget {
         grid-column: span 1;
-    }
-    .header {
-        flex-direction: column;
-        gap: 1rem;
     }
 }
