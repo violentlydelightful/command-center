@@ -24,6 +24,12 @@
             </div>
             <div class="header-right">
                 <span class="timestamp" id="timestamp"></span>
+                <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                    </svg>
+                    <span id="editModeText">Edit</span>
+                </button>
                 <button class="btn-refresh" onclick="refreshAll()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
@@ -157,10 +163,182 @@
                 <span id="source-count">6</span> data sources
             </span>
             <span>Updated <span id="last-update">--</span></span>
+            <span class="reset-layout" onclick="resetLayout()" style="cursor:pointer; opacity:0.6; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+                Reset Layout
+            </span>
         </footer>
     </div>
 
     <script>
+        // ========== DRAG AND DROP SYSTEM ==========
+        let editMode = false;
+        let draggedWidget = null;
+        let draggedIndex = null;
+        const grid = document.querySelector('.grid');
+        const widgets = Array.from(grid.querySelectorAll('.widget'));
+
+        // Widget order (saved to localStorage)
+        const widgetClasses = [
+            'briefing-widget', 'weather-widget', 'stocks-widget',
+            'calendar-widget', 'news-widget', 'github-widget',
+            'quote-widget', 'tasks-widget', 'stats-widget'
+        ];
+
+        // Load saved layout
+        function loadLayout() {
+            const saved = localStorage.getItem('dashboardLayout');
+            if (saved) {
+                try {
+                    const order = JSON.parse(saved);
+                    order.forEach((className, index) => {
+                        const widget = grid.querySelector('.' + className);
+                        if (widget) {
+                            grid.appendChild(widget);
+                        }
+                    });
+                } catch (e) {
+                    console.log('Could not load saved layout');
+                }
+            }
+        }
+
+        // Save layout
+        function saveLayout() {
+            const currentOrder = Array.from(grid.querySelectorAll('.widget'))
+                .map(w => widgetClasses.find(c => w.classList.contains(c)))
+                .filter(Boolean);
+            localStorage.setItem('dashboardLayout', JSON.stringify(currentOrder));
+        }
+
+        // Toggle edit mode
+        function toggleEditMode() {
+            editMode = !editMode;
+            const btn = document.getElementById('editModeBtn');
+            const text = document.getElementById('editModeText');
+
+            if (editMode) {
+                grid.classList.add('edit-mode');
+                btn.classList.add('active');
+                text.textContent = 'Done';
+                enableDragDrop();
+            } else {
+                grid.classList.remove('edit-mode');
+                btn.classList.remove('active');
+                text.textContent = 'Edit';
+                disableDragDrop();
+                saveLayout();
+            }
+        }
+
+        // Enable drag and drop
+        function enableDragDrop() {
+            const allWidgets = grid.querySelectorAll('.widget');
+            allWidgets.forEach((widget, index) => {
+                widget.draggable = true;
+                widget.dataset.index = index;
+
+                widget.addEventListener('dragstart', handleDragStart);
+                widget.addEventListener('dragend', handleDragEnd);
+                widget.addEventListener('dragover', handleDragOver);
+                widget.addEventListener('dragenter', handleDragEnter);
+                widget.addEventListener('dragleave', handleDragLeave);
+                widget.addEventListener('drop', handleDrop);
+            });
+        }
+
+        // Disable drag and drop
+        function disableDragDrop() {
+            const allWidgets = grid.querySelectorAll('.widget');
+            allWidgets.forEach(widget => {
+                widget.draggable = false;
+                widget.removeEventListener('dragstart', handleDragStart);
+                widget.removeEventListener('dragend', handleDragEnd);
+                widget.removeEventListener('dragover', handleDragOver);
+                widget.removeEventListener('dragenter', handleDragEnter);
+                widget.removeEventListener('dragleave', handleDragLeave);
+                widget.removeEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedWidget = this;
+            draggedIndex = Array.from(grid.children).indexOf(this);
+            this.classList.add('dragging');
+            grid.classList.add('dragging-active');
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', draggedIndex);
+
+            // Create custom drag image
+            const rect = this.getBoundingClientRect();
+            e.dataTransfer.setDragImage(this, rect.width / 2, 30);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            grid.classList.remove('dragging-active');
+
+            // Remove all drag-over classes
+            grid.querySelectorAll('.widget').forEach(w => {
+                w.classList.remove('drag-over');
+            });
+
+            draggedWidget = null;
+            draggedIndex = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (this !== draggedWidget) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (this !== draggedWidget && draggedWidget) {
+                // Swap the widgets
+                const allWidgets = Array.from(grid.children);
+                const dropIndex = allWidgets.indexOf(this);
+
+                if (draggedIndex < dropIndex) {
+                    this.parentNode.insertBefore(draggedWidget, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedWidget, this);
+                }
+
+                // Visual feedback
+                draggedWidget.style.animation = 'none';
+                draggedWidget.offsetHeight; // Trigger reflow
+                draggedWidget.style.animation = '';
+
+                this.classList.remove('drag-over');
+            }
+
+            return false;
+        }
+
+        // Reset layout to default
+        function resetLayout() {
+            localStorage.removeItem('dashboardLayout');
+            location.reload();
+        }
+
+        // Load saved layout on startup
+        loadLayout();
+
+        // ========== ANIMATED BACKGROUND ==========
         // Create animated stars
         const starsContainer = document.getElementById('stars');
         for (let i = 0; i < 50; i++) {
