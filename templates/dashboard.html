@@ -7,35 +7,55 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="stars" id="stars"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
     <div class="dashboard">
         <header class="header">
             <div class="header-left">
                 <h1>Command Center</h1>
-                <span class="status" id="status">Connecting...</span>
+                <span class="status">
+                    <span class="status-dot"></span>
+                    <span id="status">Live</span>
+                </span>
             </div>
             <div class="header-right">
                 <span class="timestamp" id="timestamp"></span>
-                <button class="btn-refresh" onclick="refreshAll()">Refresh</button>
+                <button class="btn-refresh" onclick="refreshAll()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
             </div>
         </header>
 
         <main class="grid">
-            <!-- AI Briefing - Left column, full height -->
+            <!-- AI Briefing -->
             <section class="widget briefing-widget">
                 <div class="widget-header">
-                    <h2>Daily Briefing</h2>
-                    <span class="widget-badge" id="ai-badge">AI</span>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Daily Briefing
+                    </h2>
+                    <span class="widget-badge" id="ai-badge">Auto</span>
                 </div>
                 <div class="widget-content" id="briefing-content">
                     <div class="loading">Generating...</div>
                 </div>
-                <button class="btn-regenerate" onclick="loadBriefing()">Regenerate</button>
+                <button class="btn-regenerate" onclick="loadBriefing()">↻ Regenerate</button>
             </section>
 
             <!-- Weather Widget -->
             <section class="widget weather-widget">
                 <div class="widget-header">
-                    <h2>Weather</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+                        Weather
+                    </h2>
                     <input type="text" id="city-input" value="New York" class="city-input" onchange="loadWeather()">
                 </div>
                 <div class="widget-content" id="weather-content">
@@ -46,17 +66,36 @@
             <!-- Markets Widget -->
             <section class="widget stocks-widget">
                 <div class="widget-header">
-                    <h2>Markets</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                        Markets
+                    </h2>
+                    <span class="widget-badge live">Live</span>
                 </div>
                 <div class="widget-content" id="stocks-content">
                     <div class="loading">...</div>
                 </div>
             </section>
 
-            <!-- Headlines - Right column, full height -->
+            <!-- Calendar Widget -->
+            <section class="widget calendar-widget">
+                <div class="widget-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                        Calendar
+                    </h2>
+                </div>
+                <div class="widget-content" id="calendar-content"></div>
+            </section>
+
+            <!-- Headlines -->
             <section class="widget news-widget">
                 <div class="widget-header">
-                    <h2>Headlines</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                        Headlines
+                    </h2>
+                    <span class="widget-badge live">Live</span>
                 </div>
                 <div class="widget-content" id="news-content">
                     <div class="loading">...</div>
@@ -66,7 +105,10 @@
             <!-- GitHub Trending -->
             <section class="widget github-widget">
                 <div class="widget-header">
-                    <h2>Trending</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        Trending
+                    </h2>
                 </div>
                 <div class="widget-content" id="github-content">
                     <div class="loading">...</div>
@@ -76,27 +118,157 @@
             <!-- Quote -->
             <section class="widget quote-widget">
                 <div class="widget-header">
-                    <h2>Inspiration</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
+                        Inspiration
+                    </h2>
                 </div>
                 <div class="widget-content" id="quote-content">
                     <div class="loading">...</div>
                 </div>
             </section>
+
+            <!-- Tasks Widget -->
+            <section class="widget tasks-widget">
+                <div class="widget-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Tasks
+                    </h2>
+                </div>
+                <div class="widget-content" id="tasks-content"></div>
+            </section>
+
+            <!-- Stats Widget -->
+            <section class="widget stats-widget">
+                <div class="widget-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                        Stats
+                    </h2>
+                </div>
+                <div class="widget-content" id="stats-content"></div>
+            </section>
         </main>
 
         <footer>
-            <span id="source-count">5</span> sources &bull; Updated <span id="last-update">--</span>
+            <span>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><circle cx="12" cy="12" r="10"/></svg>
+                <span id="source-count">6</span> data sources
+            </span>
+            <span>Updated <span id="last-update">--</span></span>
         </footer>
     </div>
 
     <script>
+        // Create animated stars
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (2 + Math.random() * 2) + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Weather icons map
+        const weatherIcons = {
+            'Clear': '☀️', 'Sunny': '☀️',
+            'Partly cloudy': '⛅', 'Partly Cloudy': '⛅',
+            'Cloudy': '☁️', 'Overcast': '☁️',
+            'Mist': '🌫️', 'Fog': '🌫️',
+            'Rain': '🌧️', 'Light rain': '🌦️', 'Heavy rain': '⛈️',
+            'Snow': '❄️', 'Light snow': '🌨️',
+            'Thunderstorm': '⛈️', 'Thunder': '⛈️'
+        };
+
+        function getWeatherIcon(condition) {
+            for (const [key, icon] of Object.entries(weatherIcons)) {
+                if (condition.toLowerCase().includes(key.toLowerCase())) return icon;
+            }
+            return '🌤️';
+        }
+
+        // Clock with seconds
         function updateTimestamp() {
             const now = new Date();
-            document.getElementById('timestamp').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const secs = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('timestamp').innerHTML = `${time}<span class="seconds">:${secs}</span>`;
         }
         setInterval(updateTimestamp, 1000);
         updateTimestamp();
 
+        // Render Calendar
+        function renderCalendar() {
+            const now = new Date();
+            const month = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const today = now.getDate();
+            const eventDays = [5, 12, 18, 22, 28]; // Demo events
+
+            let html = `<div class="calendar-month">${month}</div><div class="calendar-grid">`;
+            ['S','M','T','W','T','F','S'].forEach(d => html += `<div class="calendar-header">${d}</div>`);
+
+            // Previous month padding
+            for (let i = 0; i < firstDay; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth(), 0).getDate() - firstDay + i + 1;
+                html += `<div class="calendar-day other-month">${d}</div>`;
+            }
+            // Current month
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isToday = d === today ? 'today' : '';
+                const hasEvent = eventDays.includes(d) ? 'has-event' : '';
+                html += `<div class="calendar-day ${isToday} ${hasEvent}">${d}</div>`;
+            }
+            html += '</div>';
+            document.getElementById('calendar-content').innerHTML = html;
+        }
+
+        // Render Tasks
+        function renderTasks() {
+            const tasks = [
+                { text: 'Review Q1 metrics report', completed: true, priority: 'high' },
+                { text: 'Update portfolio projects', completed: true, priority: 'medium' },
+                { text: 'Prepare for morning standup', completed: false, priority: 'high' },
+                { text: 'Research new AI frameworks', completed: false, priority: 'medium' },
+                { text: 'Code review PR #142', completed: false, priority: 'low' },
+            ];
+            document.getElementById('tasks-content').innerHTML = `
+                <div class="tasks-list">
+                    ${tasks.map(t => `
+                        <div class="task-item ${t.completed ? 'completed' : ''}">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">${t.text}</span>
+                            <span class="task-priority ${t.priority}"></span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Render Stats
+        function renderStats() {
+            document.getElementById('stats-content').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Projects</div>
+                        <div class="stat-change">+2 this week</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">847</div>
+                        <div class="stat-label">Commits</div>
+                        <div class="stat-change">+23 today</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // API Loaders
         async function loadWeather() {
             const city = document.getElementById('city-input').value;
             try {
@@ -160,6 +332,7 @@
             }
         }
 
+        // Render Functions
         function renderWeather(data) {
             const container = document.getElementById('weather-content');
             if (data.error && !data.demo) {
@@ -167,13 +340,25 @@
                 return;
             }
             const w = data.data;
+            const icon = getWeatherIcon(w.condition);
             container.innerHTML = `
                 <div class="weather-display">
+                    <div class="weather-icon">${icon}</div>
                     <div class="temp-main">${w.temp}°</div>
                     <div class="condition">${w.condition}</div>
                     <div class="weather-details">
-                        <span>H:${w.feels_like || w.temp}°</span>
-                        <span>L:${Math.round(w.temp * 0.85)}°</span>
+                        <span>↑ ${w.feels_like || w.temp + 3}°</span>
+                        <span>↓ ${Math.round(w.temp - 5)}°</span>
+                    </div>
+                    <div class="weather-extra">
+                        <div class="weather-stat">
+                            <div class="weather-stat-value">${w.humidity}%</div>
+                            <div class="weather-stat-label">Humidity</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="weather-stat-value">${w.feels_like || w.temp}°</div>
+                            <div class="weather-stat-label">Feels Like</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -185,15 +370,23 @@
                 container.innerHTML = `<div class="error">${data.data || 'No data'}</div>`;
                 return;
             }
-            const formatPrice = (p) => p > 1000 ? `${(p/1000).toFixed(1)}K` : p.toFixed(2);
+            const names = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana' };
+            const formatPrice = (p) => p > 1000 ? `$${(p/1000).toFixed(1)}K` : `$${p.toFixed(2)}`;
+
             container.innerHTML = `
                 <div class="stocks-list">
                     ${data.data.map(s => `
                         <div class="stock-item ${s.change_pct >= 0 ? 'positive' : 'negative'}">
-                            <span class="stock-symbol">${s.symbol}</span>
-                            <div class="stock-info">
-                                <span class="stock-price">$${formatPrice(s.price)}</span>
-                                <span class="stock-change">${s.change_pct >= 0 ? '+' : ''}${s.change_pct.toFixed(2)}%</span>
+                            <div class="stock-left">
+                                <div class="stock-icon ${s.symbol.toLowerCase()}">${s.symbol[0]}</div>
+                                <div>
+                                    <div class="stock-symbol">${s.symbol}</div>
+                                    <div class="stock-name">${names[s.symbol] || s.symbol}</div>
+                                </div>
+                            </div>
+                            <div class="stock-right">
+                                <div class="stock-price">${formatPrice(s.price)}</div>
+                                <span class="stock-change">${s.change_pct >= 0 ? '▲' : '▼'} ${Math.abs(s.change_pct).toFixed(2)}%</span>
                             </div>
                         </div>
                     `).join('')}
@@ -207,12 +400,16 @@
                 container.innerHTML = '<div class="error">No news</div>';
                 return;
             }
+            const times = ['2m ago', '15m ago', '34m ago', '1h ago', '2h ago', '3h ago', '4h ago', '5h ago'];
             container.innerHTML = `
                 <div class="news-list">
-                    ${data.data.slice(0, 8).map(n => `
+                    ${data.data.slice(0, 8).map((n, i) => `
                         <div class="news-item">
                             <span class="news-title">${n.title}</span>
-                            <span class="news-source">${n.source}</span>
+                            <div class="news-meta">
+                                <span class="news-source">${n.source}</span>
+                                <span class="news-time">${times[i] || '6h ago'}</span>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -228,10 +425,14 @@
             const formatStars = (s) => s > 1000 ? `${(s/1000).toFixed(1)}k` : s;
             container.innerHTML = `
                 <div class="github-list">
-                    ${data.data.slice(0, 5).map(r => `
+                    ${data.data.slice(0, 6).map((r, i) => `
                         <div class="github-item">
-                            <span class="repo-name">${r.name.split('/')[1] || r.name}</span>
-                            <span class="repo-stars">${formatStars(r.stars)}</span>
+                            <span class="github-rank">${i + 1}</span>
+                            <div class="github-info">
+                                <div class="repo-name">${r.name.split('/')[1] || r.name}</div>
+                                <div class="repo-desc">${r.description || 'No description'}</div>
+                            </div>
+                            <span class="repo-stars">★ ${formatStars(r.stars)}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -244,10 +445,10 @@
                 container.innerHTML = '<div class="error">No quote</div>';
                 return;
             }
-            const text = data.data.text.length > 120 ? data.data.text.substring(0, 117) + '...' : data.data.text;
+            const text = data.data.text.length > 100 ? data.data.text.substring(0, 97) + '...' : data.data.text;
             container.innerHTML = `
                 <blockquote class="quote-display">
-                    <p>"${text}"</p>
+                    <p>${text}</p>
                     <cite>— ${data.data.author}</cite>
                 </blockquote>
             `;
@@ -266,12 +467,12 @@
 
             container.innerHTML = `
                 <div class="briefing-text">${content}</div>
-                <div class="briefing-meta">${new Date(data.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <div class="briefing-meta">Generated ${new Date(data.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             `;
         }
 
         async function refreshAll() {
-            document.getElementById('status').textContent = 'Refreshing...';
+            document.getElementById('status').textContent = 'Syncing...';
             await Promise.all([
                 loadWeather(),
                 loadStocks(),
@@ -280,11 +481,22 @@
                 loadQuote(),
                 loadBriefing()
             ]);
+            renderCalendar();
+            renderTasks();
+            renderStats();
             document.getElementById('status').textContent = 'Live';
             document.getElementById('last-update').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
 
+        // Initial load
         refreshAll();
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            loadWeather();
+            loadStocks();
+            loadNews();
+        }, 300000);
     </script>
 </body>
 </html>
