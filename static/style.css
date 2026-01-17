@@ -1,0 +1,395 @@
+/* Command Center - Dark Professional Dashboard */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-widget: #1e2433;
+    --text-primary: #e7e9ea;
+    --text-secondary: #8b98a5;
+    --accent: #1d9bf0;
+    --accent-green: #00ba7c;
+    --accent-red: #f4212e;
+    --border: #2f3336;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+.dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.status {
+    font-size: 0.85rem;
+    color: var(--accent-green);
+    margin-left: 1rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.timestamp {
+    font-family: 'SF Mono', monospace;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.btn-refresh {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Grid Layout */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    gap: 1.5rem;
+}
+
+/* Widgets */
+.widget {
+    background: var(--bg-widget);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    position: relative;
+}
+
+.widget-large {
+    grid-column: span 2;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.widget-header h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.widget-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.widget-badge.ai {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+}
+
+.widget-badge.demo {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+
+.widget-content {
+    min-height: 100px;
+}
+
+/* Loading & Error */
+.loading {
+    color: var(--text-secondary);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.error {
+    color: var(--accent-red);
+    font-size: 0.9rem;
+}
+
+.demo-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.65rem;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Briefing Widget */
+.briefing-widget .widget-content {
+    min-height: 200px;
+}
+
+.briefing-text {
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.briefing-text strong {
+    color: var(--accent);
+    display: block;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.briefing-meta {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.btn-regenerate {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-regenerate:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Weather Widget */
+.weather-display {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.temp-main {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.condition {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+
+.weather-details {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.city-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    width: 100px;
+}
+
+/* Stocks Widget */
+.stocks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.stock-symbol {
+    font-weight: 600;
+}
+
+.stock-price {
+    font-family: 'SF Mono', monospace;
+}
+
+.stock-change {
+    font-family: 'SF Mono', monospace;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.stock-item.positive .stock-change {
+    background: rgba(0, 186, 124, 0.15);
+    color: var(--accent-green);
+}
+
+.stock-item.negative .stock-change {
+    background: rgba(244, 33, 46, 0.15);
+    color: var(--accent-red);
+}
+
+/* News Widget */
+.news-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.news-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.news-title {
+    display: block;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.25rem;
+}
+
+.news-source {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+#news-category {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* GitHub Widget */
+.github-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.github-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.repo-name {
+    font-size: 0.85rem;
+    color: var(--accent);
+}
+
+.repo-stars {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Quote Widget */
+.quote-display {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.quote-display p {
+    font-size: 1rem;
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+}
+
+.quote-display cite {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .widget-large {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    .widget-large {
+        grid-column: span 1;
+    }
+    .header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

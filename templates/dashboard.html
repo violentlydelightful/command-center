@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div class="header-left">
+                <h1>Command Center</h1>
+                <span class="status" id="status">Connecting...</span>
+            </div>
+            <div class="header-right">
+                <span class="timestamp" id="timestamp"></span>
+                <button class="btn-refresh" onclick="refreshAll()">↻ Refresh</button>
+            </div>
+        </header>
+
+        <main class="grid">
+            <!-- AI Briefing -->
+            <section class="widget widget-large briefing-widget">
+                <div class="widget-header">
+                    <h2>Daily Briefing</h2>
+                    <span class="widget-badge" id="ai-badge">AI</span>
+                </div>
+                <div class="widget-content" id="briefing-content">
+                    <div class="loading">Generating briefing...</div>
+                </div>
+                <button class="btn-regenerate" onclick="loadBriefing()">Regenerate</button>
+            </section>
+
+            <!-- Weather Widget -->
+            <section class="widget weather-widget">
+                <div class="widget-header">
+                    <h2>Weather</h2>
+                    <input type="text" id="city-input" value="New York" class="city-input" onchange="loadWeather()">
+                </div>
+                <div class="widget-content" id="weather-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Stocks Widget -->
+            <section class="widget stocks-widget">
+                <div class="widget-header">
+                    <h2>Markets</h2>
+                </div>
+                <div class="widget-content" id="stocks-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <!-- News Widget -->
+            <section class="widget news-widget">
+                <div class="widget-header">
+                    <h2>Headlines</h2>
+                    <select id="news-category" onchange="loadNews()">
+                        <option value="technology">Technology</option>
+                        <option value="business">Business</option>
+                        <option value="science">Science</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="widget-content" id="news-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <!-- GitHub Trending -->
+            <section class="widget github-widget">
+                <div class="widget-header">
+                    <h2>GitHub Trending</h2>
+                </div>
+                <div class="widget-content" id="github-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Quote Widget -->
+            <section class="widget quote-widget">
+                <div class="widget-header">
+                    <h2>Daily Inspiration</h2>
+                </div>
+                <div class="widget-content" id="quote-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Aggregating <span id="source-count">5</span> data sources • Last updated <span id="last-update">--</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTimestamp, 1000);
+        updateTimestamp();
+
+        // Load individual widgets
+        async function loadWeather() {
+            const city = document.getElementById('city-input').value;
+            try {
+                const res = await fetch(`/api/widget/weather?city=${encodeURIComponent(city)}`);
+                const data = await res.json();
+                renderWeather(data);
+            } catch (e) {
+                document.getElementById('weather-content').innerHTML = '<div class="error">Failed to load</div>';
+            }
+        }
+
+        async function loadStocks() {
+            try {
+                const res = await fetch('/api/widget/stocks');
+                const data = await res.json();
+                renderStocks(data);
+            } catch (e) {
+                document.getElementById('stocks-content').innerHTML = '<div class="error">Failed to load</div>';
+            }
+        }
+
+        async function loadNews() {
+            const category = document.getElementById('news-category').value;
+            try {
+                const res = await fetch(`/api/widget/news?category=${category}`);
+                const data = await res.json();
+                renderNews(data);
+            } catch (e) {
+                document.getElementById('news-content').innerHTML = '<div class="error">Failed to load</div>';
+            }
+        }
+
+        async function loadGithub() {
+            try {
+                const res = await fetch('/api/widget/github');
+                const data = await res.json();
+                renderGithub(data);
+            } catch (e) {
+                document.getElementById('github-content').innerHTML = '<div class="error">Failed to load</div>';
+            }
+        }
+
+        async function loadQuote() {
+            try {
+                const res = await fetch('/api/widget/quote');
+                const data = await res.json();
+                renderQuote(data);
+            } catch (e) {
+                document.getElementById('quote-content').innerHTML = '<div class="error">Failed to load</div>';
+            }
+        }
+
+        async function loadBriefing() {
+            document.getElementById('briefing-content').innerHTML = '<div class="loading">Generating AI briefing...</div>';
+            try {
+                const city = document.getElementById('city-input').value;
+                const category = document.getElementById('news-category').value;
+                const res = await fetch(`/api/briefing?city=${encodeURIComponent(city)}&category=${category}`);
+                const data = await res.json();
+                renderBriefing(data);
+            } catch (e) {
+                document.getElementById('briefing-content').innerHTML = '<div class="error">Failed to generate briefing</div>';
+            }
+        }
+
+        // Render functions
+        function renderWeather(data) {
+            const container = document.getElementById('weather-content');
+            if (data.error && !data.demo) {
+                container.innerHTML = `<div class="error">${data.error}</div>`;
+                return;
+            }
+            const w = data.data;
+            container.innerHTML = `
+                <div class="weather-display">
+                    <div class="temp-main">${w.temp}°F</div>
+                    <div class="condition">${w.condition}</div>
+                    <div class="weather-details">
+                        <span>Humidity: ${w.humidity}%</span>
+                        ${w.feels_like ? `<span>Feels like: ${w.feels_like}°F</span>` : ''}
+                    </div>
+                </div>
+                ${data.demo ? '<div class="demo-badge">Demo Data</div>' : ''}
+            `;
+        }
+
+        function renderStocks(data) {
+            const container = document.getElementById('stocks-content');
+            if (!data.data || typeof data.data === 'string') {
+                container.innerHTML = `<div class="error">${data.data || 'No data'}</div>`;
+                return;
+            }
+            container.innerHTML = `
+                <div class="stocks-list">
+                    ${data.data.map(s => `
+                        <div class="stock-item ${s.change_pct >= 0 ? 'positive' : 'negative'}">
+                            <span class="stock-symbol">${s.symbol}</span>
+                            <span class="stock-price">$${s.price.toFixed(2)}</span>
+                            <span class="stock-change">${s.change_pct >= 0 ? '+' : ''}${s.change_pct.toFixed(2)}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ${data.demo ? '<div class="demo-badge">Demo Data</div>' : ''}
+            `;
+        }
+
+        function renderNews(data) {
+            const container = document.getElementById('news-content');
+            if (!data.data) {
+                container.innerHTML = '<div class="error">No news available</div>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="news-list">
+                    ${data.data.map(n => `
+                        <div class="news-item">
+                            <span class="news-title">${n.title}</span>
+                            <span class="news-source">${n.source}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ${data.demo ? '<div class="demo-badge">Demo Data</div>' : ''}
+            `;
+        }
+
+        function renderGithub(data) {
+            const container = document.getElementById('github-content');
+            if (!data.data) {
+                container.innerHTML = '<div class="error">No data</div>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="github-list">
+                    ${data.data.map(r => `
+                        <div class="github-item">
+                            <span class="repo-name">${r.name}</span>
+                            <span class="repo-stars">⭐ ${r.stars.toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ${data.demo ? '<div class="demo-badge">Demo Data</div>' : ''}
+            `;
+        }
+
+        function renderQuote(data) {
+            const container = document.getElementById('quote-content');
+            if (!data.data) {
+                container.innerHTML = '<div class="error">No quote</div>';
+                return;
+            }
+            container.innerHTML = `
+                <blockquote class="quote-display">
+                    <p>"${data.data.text}"</p>
+                    <cite>— ${data.data.author}</cite>
+                </blockquote>
+                ${data.demo ? '<div class="demo-badge">Demo Data</div>' : ''}
+            `;
+        }
+
+        function renderBriefing(data) {
+            const container = document.getElementById('briefing-content');
+            const badge = document.getElementById('ai-badge');
+
+            badge.textContent = data.ai_powered ? 'AI' : 'Demo';
+            badge.className = `widget-badge ${data.ai_powered ? 'ai' : 'demo'}`;
+
+            // Convert markdown-style formatting
+            let content = data.briefing
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+
+            container.innerHTML = `
+                <div class="briefing-text">${content}</div>
+                <div class="briefing-meta">Generated at ${new Date(data.generated_at).toLocaleTimeString()}</div>
+            `;
+        }
+
+        async function refreshAll() {
+            document.getElementById('status').textContent = 'Refreshing...';
+            await Promise.all([
+                loadWeather(),
+                loadStocks(),
+                loadNews(),
+                loadGithub(),
+                loadQuote(),
+                loadBriefing()
+            ]);
+            document.getElementById('status').textContent = 'Connected';
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Initial load
+        refreshAll();
+    </script>
+</body>
+</html>
