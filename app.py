@@ -31,79 +31,124 @@ class DataAggregator:
         self.cache_ttl = 300  # 5 minutes
 
     async def fetch_weather(self, session, city="New York"):
-        """Fetch current weather from OpenWeatherMap."""
-        if not WEATHER_API_KEY:
-            return {"source": "weather", "error": "API key not configured", "demo": True,
-                    "data": {"city": city, "temp": 72, "condition": "Partly Cloudy", "humidity": 45}}
-
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=imperial"
+        """Fetch current weather from wttr.in (free, no API key needed)."""
+        # Try wttr.in first (free, no key needed)
+        url = f"https://wttr.in/{city}?format=j1"
         try:
-            async with session.get(url) as response:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 data = await response.json()
+                current = data["current_condition"][0]
                 return {
                     "source": "weather",
                     "data": {
-                        "city": data.get("name", city),
-                        "temp": round(data["main"]["temp"]),
-                        "condition": data["weather"][0]["description"].title(),
-                        "humidity": data["main"]["humidity"],
-                        "feels_like": round(data["main"]["feels_like"]),
+                        "city": data["nearest_area"][0]["areaName"][0]["value"],
+                        "temp": int(current["temp_F"]),
+                        "condition": current["weatherDesc"][0]["value"],
+                        "humidity": int(current["humidity"]),
+                        "feels_like": int(current["FeelsLikeF"]),
                     }
                 }
         except Exception as e:
+            # Fallback to OpenWeatherMap if configured
+            if WEATHER_API_KEY:
+                url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=imperial"
+                try:
+                    async with session.get(url) as response:
+                        data = await response.json()
+                        return {
+                            "source": "weather",
+                            "data": {
+                                "city": data.get("name", city),
+                                "temp": round(data["main"]["temp"]),
+                                "condition": data["weather"][0]["description"].title(),
+                                "humidity": data["main"]["humidity"],
+                                "feels_like": round(data["main"]["feels_like"]),
+                            }
+                        }
+                except:
+                    pass
             return {"source": "weather", "error": str(e)}
 
     async def fetch_news(self, session, category="technology"):
-        """Fetch top headlines from NewsAPI."""
-        if not NEWS_API_KEY:
-            return {"source": "news", "error": "API key not configured", "demo": True,
-                    "data": [
-                        {"title": "AI Continues to Transform Industries", "source": "Tech Daily"},
-                        {"title": "New Framework Released for Web Development", "source": "Dev News"},
-                        {"title": "Cloud Computing Costs Drop 20%", "source": "Business Insider"},
-                    ]}
-
-        url = f"https://newsapi.org/v2/top-headlines?category={category}&country=us&pageSize=5&apiKey={NEWS_API_KEY}"
+        """Fetch top stories from Hacker News (free, no API key needed)."""
+        # Use Hacker News API (free, no key needed) for tech news
         try:
-            async with session.get(url) as response:
-                data = await response.json()
-                articles = [{"title": a["title"], "source": a["source"]["name"]}
-                           for a in data.get("articles", [])[:5]]
-                return {"source": "news", "data": articles}
+            # Get top story IDs
+            async with session.get("https://hacker-news.firebaseio.com/v0/topstories.json") as response:
+                story_ids = await response.json()
+
+            # Fetch first 5 stories
+            articles = []
+            for story_id in story_ids[:5]:
+                async with session.get(f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json") as response:
+                    story = await response.json()
+                    if story and story.get("title"):
+                        articles.append({
+                            "title": story["title"],
+                            "source": "Hacker News",
+                            "url": story.get("url", f"https://news.ycombinator.com/item?id={story_id}")
+                        })
+            return {"source": "news", "data": articles}
         except Exception as e:
+            # Fallback to NewsAPI if configured
+            if NEWS_API_KEY:
+                url = f"https://newsapi.org/v2/top-headlines?category={category}&country=us&pageSize=5&apiKey={NEWS_API_KEY}"
+                try:
+                    async with session.get(url) as response:
+                        data = await response.json()
+                        articles = [{"title": a["title"], "source": a["source"]["name"]}
+                                   for a in data.get("articles", [])[:5]]
+                        return {"source": "news", "data": articles}
+                except:
+                    pass
             return {"source": "news", "error": str(e)}
 
     async def fetch_stocks(self, session, symbols=["AAPL", "GOOGL", "MSFT"]):
-        """Fetch stock data from Alpha Vantage."""
-        if not ALPHA_VANTAGE_KEY:
-            return {"source": "stocks", "error": "API key not configured", "demo": True,
-                    "data": [
-                        {"symbol": "AAPL", "price": 178.52, "change": 2.34, "change_pct": 1.32},
-                        {"symbol": "GOOGL", "price": 141.23, "change": -0.87, "change_pct": -0.61},
-                        {"symbol": "MSFT", "price": 378.91, "change": 4.56, "change_pct": 1.22},
-                    ]}
-
-        stocks = []
-        for symbol in symbols[:3]:  # Limit API calls
-            url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ALPHA_VANTAGE_KEY}"
-            try:
-                async with session.get(url) as response:
-                    data = await response.json()
-                    quote = data.get("Global Quote", {})
-                    if quote:
+        """Fetch market data - uses CoinGecko (free) for crypto or Alpha Vantage for stocks."""
+        # Use CoinGecko for crypto (free, no key needed)
+        try:
+            url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true"
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                data = await response.json()
+                crypto_map = {"bitcoin": "BTC", "ethereum": "ETH", "solana": "SOL"}
+                stocks = []
+                for coin_id, symbol in crypto_map.items():
+                    if coin_id in data:
+                        price = data[coin_id]["usd"]
+                        change_pct = data[coin_id].get("usd_24h_change", 0)
                         stocks.append({
                             "symbol": symbol,
-                            "price": float(quote.get("05. price", 0)),
-                            "change": float(quote.get("09. change", 0)),
-                            "change_pct": float(quote.get("10. change percent", "0%").replace("%", ""))
+                            "price": price,
+                            "change": price * (change_pct / 100),
+                            "change_pct": round(change_pct, 2)
                         })
-            except Exception as e:
-                pass
-        return {"source": "stocks", "data": stocks if stocks else "Rate limited"}
+                return {"source": "stocks", "data": stocks, "crypto": True}
+        except Exception as e:
+            # Fallback to Alpha Vantage if configured
+            if ALPHA_VANTAGE_KEY:
+                stocks = []
+                for symbol in symbols[:3]:
+                    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ALPHA_VANTAGE_KEY}"
+                    try:
+                        async with session.get(url) as response:
+                            data = await response.json()
+                            quote = data.get("Global Quote", {})
+                            if quote:
+                                stocks.append({
+                                    "symbol": symbol,
+                                    "price": float(quote.get("05. price", 0)),
+                                    "change": float(quote.get("09. change", 0)),
+                                    "change_pct": float(quote.get("10. change percent", "0%").replace("%", ""))
+                                })
+                    except:
+                        pass
+                if stocks:
+                    return {"source": "stocks", "data": stocks}
+            return {"source": "stocks", "error": str(e)}
 
     async def fetch_github_trending(self, session):
         """Fetch trending repos from GitHub."""
-        url = "https://api.github.com/search/repositories?q=created:>2024-01-01&sort=stars&order=desc&per_page=5"
+        url = "https://api.github.com/search/repositories?q=created:>2025-01-01&sort=stars&order=desc&per_page=5"
         try:
             async with session.get(url) as response:
                 data = await response.json()
