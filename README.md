@@ -1,5 +1,7 @@
 # Command Center: Personal Intelligence Dashboard
 
+![Dashboard Screenshot](screenshots/dashboard.png)
+
 ## The Problem
 
 I check the same things every morning: weather, news, markets, what's trending on GitHub. That's 4+ tabs, 4+ logins, scattered attention before I've even started working.
